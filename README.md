@@ -79,9 +79,11 @@ inboxInfo := EVMailImapGetMailBoxInformation(conn, "/INBOX")
 log.Println(inboxInfo)
 inboxHeader, err := EVMailImapGetAllMailBoxMessageHeader(conn, inboxInfo)
 log.Println(err, inboxHeader)
+for _, mailHeader := range inboxHeader.Headers {
+	email := EVMailImapGetMessageById(conn, "INBOX", mailHeader.Id)
+	log.Println("from:", email.Body.From, "subject:", email.Body.Subject)
+	log.Println(email.Body.Body)
+}
 logoutResponse := EVMailImapLogout(conn)
 log.Println(logoutResponse)
-for _, mailHeader := range inboxHeader.Headers {
-	log.Println(mailHeader.Id, ":", mailHeader.Subject)
-}
 ```
