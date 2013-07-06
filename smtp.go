@@ -5,7 +5,6 @@
 package evmail
 
 import (
-	//    "log"
 	"bytes"
 	"encoding/base64"
 	"errors"
@@ -67,7 +66,6 @@ func (Mail *EVMailEmail) Attach(file string) error {
 
 	_, fileName := filepath.Split(file)
 	Mail.Attachments[fileName] = buffer
-	//log.Printf("%v----%s",buffer, fileName)
 	return nil
 }
 
