@@ -50,7 +50,7 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 		files.Append(f)
 	}
 
-	requestMsg.AppendToBody(files)
+	request.AppendToBody(files)
 	request.AppendToBody(kvs)
 	requestMsg.Body("requests").(*evmessage.EVMessageRequests).InProgress = request
 	return requestMsg, responseMsg, "EVMailEmail.RpcSend", nil

@@ -24,3 +24,4 @@ _testmain.go
 *.test
 smtp_test.go
 imap_test.go
+start.sh
