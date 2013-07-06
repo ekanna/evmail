@@ -42,8 +42,9 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	email.From = kValues.ByKey("from")
 	email.Subject = kValues.ByKey("subject")
 	email.Body = kValues.ByKey("message")
-	files := request.Body("files").(*evmessage.EVMessageFiles)
+	files := request.Body("files")
 	if files != nil {
+		files = files.(*evmessage.EVMessageFiles)
 		for _, f := range files.Files {
 			f.DecodeBase64()
 			f.WriteFile("/tmp/" + f.Name)
