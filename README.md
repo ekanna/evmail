@@ -25,8 +25,8 @@ continous integration
 
 [![Build Status](https://drone.io/github.com/evalgo/evmail/status.png)](https://drone.io/github.com/evalgo/evmail/latest)
 
-usage
-=====
+usage send
+==========
 
 sending simple mail
 -------------------
@@ -64,5 +64,24 @@ Mail.Attach("/path/to/your/file")
 err := Mail.Send()
 if err != nil {
 	log.Fatal(err)
+}
+```
+
+usage get message from imap
+===========================
+
+```go
+conn, serverResponse, err := EVMailImapConnect("imap.adress.com", 993, "certs/client.pem", "certs/client.key")
+log.Println(err, serverResponse, conn)
+loginResponse := EVMailImapLogin(conn, "<user@address.com>", "<secret_password>")
+log.Println(loginResponse)
+inboxInfo := EVMailImapGetMailBoxInformation(conn, "/INBOX")
+log.Println(inboxInfo)
+inboxHeader, err := EVMailImapGetAllMailBoxMessageHeader(conn, inboxInfo)
+log.Println(err, inboxHeader)
+logoutResponse := EVMailImapLogout(conn)
+log.Println(logoutResponse)
+for _, mailHeader := range inboxHeader.Headers {
+	log.Println(mailHeader.Id, ":", mailHeader.Subject)
 }
 ```

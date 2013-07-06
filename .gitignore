@@ -23,3 +23,4 @@ _testmain.go
 *.exe
 *.test
 smtp_test.go
+imap_test.go
