@@ -35,6 +35,10 @@ func NewEVMailEmail() *EVMailEmail {
 	return email
 }
 
+func (mail *EVMailEmail) EVName() string {
+	return "evmail"
+}
+
 type EVMailImapEmail struct {
 	Id   int          `xml:"Id"`
 	Body *EVMailEmail `xml:"Body"`
