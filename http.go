@@ -42,8 +42,8 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 	for key, _ := range r.MultipartForm.File {
 		log.Println(key)
 		f := evmessage.NewEVMessageFile()
-		f.Name = key
-		File, _, _ := r.FormFile(key)
+		File, FileHeader, _ := r.FormFile(key)
+		f.Name = FileHeader.Filename
 		fContent, _ := ioutil.ReadAll(File)
 		f.Content = fContent
 		f.EncodeBase64()

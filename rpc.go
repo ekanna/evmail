@@ -7,6 +7,7 @@ package evmail
 import (
 	"errors"
 	"github.com/evalgo/evmessage"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -45,9 +46,18 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	files := request.Body("files").(*evmessage.EVMessageFiles)
 	if files != nil {
 		for _, f := range files.Files {
+			log.Println("sending attachment:", f.Name)
 			f.DecodeBase64()
-			f.WriteFile("/tmp/" + f.Name)
-			email.Attach("/tmp/" + f.Name)
+			err := f.WriteFile("/tmp")
+			if err != nil {
+				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+				return err
+			}
+			err = email.Attach("/tmp/" + f.Name)
+			if err != nil {
+				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+				return err
+			}
 		}
 	}
 	err = email.Send()
