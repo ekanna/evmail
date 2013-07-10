@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 )
 
 var EVMailVersion string = "v1"
@@ -57,8 +59,11 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 }
 
 func (mail *EVMailEmail) EVMessageHttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) (*evmessage.EVMessage, *evmessage.EVMessage, string, error) {
-	switch r.URL.Path {
-	case "/" + EVMailVersion + "/emails", "/" + EVMailVersion + "/emails/", "/emails", "/emails/":
+	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
+	extension := filepath.Ext(requestUrlPath)
+	requestUrlPath = strings.Replace(requestUrlPath, extension, "", 1)
+	switch requestUrlPath {
+	case "/" + EVMailVersion + "/emails", "/emails":
 		switch r.Method {
 		case "POST":
 			return mail.createSendMail(r)
@@ -71,5 +76,16 @@ func (mail *EVMailEmail) EVMessageHttpCreateRpcMessage(w http.ResponseWriter, r 
 }
 
 func (mail *EVMailEmail) EVMessageHttpRpcHandleResponse(w http.ResponseWriter, r *http.Request, responseMsg *evmessage.EVMessage) ([]byte, error) {
+	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
+	extension := filepath.Ext(requestUrlPath)
+	switch extension {
+	case ".xml":
+		log.Println("response format is XML")
+		return responseMsg.ToXml()
+	case ".json":
+		log.Println("response format is JSON")
+		return responseMsg.ToJson()
+	}
+	log.Println("response format is XML (default)")
 	return responseMsg.ToXml()
 }
