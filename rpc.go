@@ -5,7 +5,7 @@
 package evmail
 
 import (
-	"errors"
+	"github.com/evalgo/everror"
 	"github.com/evalgo/evlog"
 	"github.com/evalgo/evmessage"
 	"strconv"
@@ -17,14 +17,14 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	responseMsg, err := evmessage.EVMessageRpcServiceInitialize(requestMsg, responseMsg)
 	if err != nil {
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return err
+		return everror.NewFromError(err)
 	}
 	request := requestMsg.Body("requests").(*evmessage.EVMessageRequests).InProgress
 	respObj := evmessage.NewEVMessageResponse()
 	if request == nil {
-		err = errors.New("there is no Requests.InProgress request set!")
+		err = everror.New("there is no Requests.InProgress request set!")
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return err
+		return everror.NewFromError(err)
 	}
 	respObj.Id = request.Id
 	respObj.Order = request.Order
@@ -36,7 +36,7 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	port, err := strconv.Atoi(kValues.ByKey("port"))
 	if err != nil {
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return err
+		return everror.NewFromError(err)
 	}
 	email.Port = port
 	email.To = strings.Split(kValues.ByKey("to"), " ")
@@ -51,19 +51,19 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 			err := f.WriteFile("/tmp")
 			if err != nil {
 				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-				return err
+				return everror.NewFromError(err)
 			}
 			err = email.Attach("/tmp/" + f.Name)
 			if err != nil {
 				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-				return err
+				return everror.NewFromError(err)
 			}
 		}
 	}
 	err = email.Send()
 	if err != nil {
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return err
+		return everror.NewFromError(err)
 	}
 	responseMsg.Body("responses").(*evmessage.EVMessageResponses).Append(respObj)
 	return nil

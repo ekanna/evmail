@@ -7,8 +7,8 @@ package evmail
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"fmt"
+	"github.com/evalgo/everror"
 	"io/ioutil"
 	"net/smtp"
 	"path/filepath"
@@ -55,13 +55,13 @@ func (Mail *EVMailEmail) Send() error {
 		Mail.From,
 		Mail.To,
 		content.Bytes())
-	return err
+	return everror.NewFromError(err)
 }
 
 func (Mail *EVMailEmail) Attach(file string) error {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return everror.NewFromError(err)
 	}
 
 	_, fileName := filepath.Split(file)
@@ -80,7 +80,7 @@ func (Auth *superPlainAuth) Start(Server *smtp.ServerInfo) (string, []byte, erro
 
 func (Auth *superPlainAuth) Next(FromServer []byte, More bool) ([]byte, error) {
 	if More {
-		return nil, errors.New("unexpected server challenge")
+		return nil, everror.New("unexpected server challenge")
 	}
 	return nil, nil
 }

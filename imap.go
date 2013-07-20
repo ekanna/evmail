@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/evalgo/everror"
 	"github.com/evalgo/evlog"
 	"io"
 	"regexp"
@@ -133,7 +134,7 @@ func NewEVMailImapMailBoxAllMessages() *EVMailImapMailBoxAllMessages {
 func EVMailImapSendServerMessage(conn *tls.Conn, message string) (string, error) {
 	n, err := io.WriteString(conn, message)
 	if err != nil {
-		evlog.Fatalf("client: write:%v::%s", n, err)
+		evlog.Fatalf("client: write:%v::%s", n, everror.NewFromError(err))
 	}
 	return "", nil
 }
@@ -300,7 +301,7 @@ func EVMailImapReadEmailMessage(conn *tls.Conn, MailId int) (*EVMailEmail, error
 func EVMailImapConnect(Server string, Port int, Pem string, Key string) (*tls.Conn, string, error) {
 	cert, err := tls.LoadX509KeyPair(Pem, Key)
 	if err != nil {
-		return nil, "", err
+		return nil, "", everror.NewFromError(err)
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	ServerImapConnectionString := Server
@@ -308,7 +309,7 @@ func EVMailImapConnect(Server string, Port int, Pem string, Key string) (*tls.Co
 	ServerImapConnectionString += strconv.Itoa(Port)
 	conn, err := tls.Dial("tcp", ServerImapConnectionString, &config)
 	if err != nil {
-		return nil, "", err
+		return nil, "", everror.NewFromError(err)
 	}
 	//evlog.Println("client: connected to: ", conn.RemoteAddr())
 	state := conn.ConnectionState()

@@ -5,7 +5,7 @@
 package evmail
 
 import (
-	"errors"
+	"github.com/evalgo/everror"
 	"github.com/evalgo/evlog"
 	"github.com/evalgo/evmessage"
 	"io/ioutil"
@@ -21,12 +21,12 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 	request, err := requestMsg.Body("requests").(*evmessage.EVMessageRequests).ById("evmail")
 	if err != nil {
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return nil, responseMsg, "", err
+		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	if r.FormValue("request_id") == "" {
-		err = errors.New("request_id is empty for service EVMail createSendMail")
+		err = everror.New("request_id is empty for service EVMail createSendMail")
 		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
-		return nil, responseMsg, "", err
+		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	request.Id = r.FormValue("request_id")
 	kvs := evmessage.NewEVMessageKeyValues()
@@ -68,10 +68,10 @@ func (mail *EVMailEmail) EVMessageHttpCreateRpcMessage(w http.ResponseWriter, r 
 		case "POST":
 			return mail.createSendMail(r)
 		default:
-			return nil, nil, "", errors.New("the given request method+" + r.Method + " is not supported")
+			return nil, nil, "", everror.New("the given request method+" + r.Method + " is not supported")
 		}
 	default:
-		return nil, nil, "", errors.New("...")
+		return nil, nil, "", everror.New("...")
 	}
 }
 
