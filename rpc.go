@@ -16,14 +16,14 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	*responseMsg = *requestMsg
 	responseMsg, err := evmessage.EVMessageRpcServiceInitialize(requestMsg, responseMsg)
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	request := requestMsg.Body("requests").(*evmessage.EVMessageRequests).InProgress
 	respObj := evmessage.NewEVMessageResponse()
 	if request == nil {
 		err = everror.New("there is no Requests.InProgress request set!")
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	respObj.Id = request.Id
@@ -35,7 +35,7 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	email.Server = kValues.ByKey("server")
 	port, err := strconv.Atoi(kValues.ByKey("port"))
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	email.Port = port
@@ -50,19 +50,19 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 			f.DecodeBase64()
 			err := f.WriteFile("/tmp")
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 				return everror.NewFromError(err)
 			}
 			err = email.Attach("/tmp/" + f.Name)
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 				return everror.NewFromError(err)
 			}
 		}
 	}
 	err = email.Send()
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	responseMsg.Body("responses").(*evmessage.EVMessageResponses).Append(respObj)

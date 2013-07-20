@@ -20,12 +20,12 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 	requestMsg, responseMsg := evmessage.EVMessageRpcClientInitialize("evmail")
 	request, err := requestMsg.Body("requests").(*evmessage.EVMessageRequests).ById("evmail")
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	if r.FormValue("request_id") == "" {
 		err = everror.New("request_id is empty for service EVMail createSendMail")
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(err)
+		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
 		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	request.Id = r.FormValue("request_id")
