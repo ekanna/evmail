@@ -8,8 +8,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/evalgo/evlog"
 	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -133,7 +133,7 @@ func NewEVMailImapMailBoxAllMessages() *EVMailImapMailBoxAllMessages {
 func EVMailImapSendServerMessage(conn *tls.Conn, message string) (string, error) {
 	n, err := io.WriteString(conn, message)
 	if err != nil {
-		log.Fatalf("client: write:%v::%s", n, err)
+		evlog.Fatalf("client: write:%v::%s", n, err)
 	}
 	return "", nil
 }
@@ -164,7 +164,7 @@ func EVMailImapGetAllMailboxes(conn *tls.Conn, Path string) []string {
 	ServerRequestMessage := strings.Join([]string{".", "LIST", PathOnTheServer, "\"*\"\r\n"}, " ")
 	EVMailImapSendServerMessage(conn, ServerRequestMessage)
 	AllMailBoxesString, _ := EVMailImapReadServerMessage(conn)
-	log.Print(AllMailBoxesString)
+	evlog.Print(AllMailBoxesString)
 	AllMailBoxesRaw := strings.Split(AllMailBoxesString, "\r\n")
 	for _, MailBoxRaw := range AllMailBoxesRaw {
 		if strings.Contains(MailBoxRaw, "LIST") {
@@ -182,13 +182,13 @@ func EVMailImapGetAllMailboxes(conn *tls.Conn, Path string) []string {
 
 func EVMailImapGetMailBoxInformation(conn *tls.Conn, Path string) *EVMailImapMailBoxInformation {
 	if Path == "/" {
-		log.Fatal("There is no Information available for the Server Root Directory")
+		evlog.Fatal("There is no Information available for the Server Root Directory")
 	}
 	TrimedPath := strings.TrimLeft(Path, "/")
 	TrimedPath += "\r\n"
-	log.Print(TrimedPath)
+	evlog.Print(TrimedPath)
 	RequestServerMessage := strings.Join([]string{".", "SELECT", TrimedPath}, " ")
-	log.Print(RequestServerMessage)
+	evlog.Print(RequestServerMessage)
 	EVMailImapSendServerMessage(conn, RequestServerMessage)
 	ResponseMessage, _ := EVMailImapReadServerMessage(conn)
 
@@ -233,12 +233,12 @@ func EVMailImapGetMailBoxesInformation(conn *tls.Conn) *EVMailImapMailBoxes {
 func EVMailCheckRegExpString(Expression string, String string) string {
 	RegExp, _ := regexp.Compile(Expression)
 	match := RegExp.FindString(String)
-	log.Printf("matched::::%v", match)
+	evlog.Printf("matched::::%v", match)
 	return match
 }
 
 func EVMailImapEmailSplitBoundary(EmailString string, conn *tls.Conn, MailId int) *EVMailEmail {
-	log.Print(EmailString)
+	evlog.Print(EmailString)
 	MessageHeaderRaw := EVMailImapGetRawMailBoxMessageHeader(conn, MailId)
 	// todo: check if this 2 information are important
 	//ImapParseMailHeader(MessageHeaderRaw, "Date: ")
@@ -253,11 +253,11 @@ func EVMailImapEmailSplitBoundary(EmailString string, conn *tls.Conn, MailId int
 	Mail.Subject = EVMailImapParseMailHeader(MessageHeaderRaw, "Subject: ")
 	Mail.Raw = EmailString
 	MailBodyArray := strings.Split(EmailString, "\n")
-	log.Printf("%v", MailBodyArray)
+	evlog.Printf("%v", MailBodyArray)
 	Boundary := MailBodyArray[1]
 	EmailsArray := strings.Split(EmailString, Boundary)
-	log.Printf("BOUNDARY----------------%v", MailBodyArray[1])
-	log.Printf("-----------------EMAILS %d :: %v", len(EmailsArray), EmailsArray)
+	evlog.Printf("BOUNDARY----------------%v", MailBodyArray[1])
+	evlog.Printf("-----------------EMAILS %d :: %v", len(EmailsArray), EmailsArray)
 	Mail.Body = EmailsArray[1]
 	if len(EmailsArray) >= 3 {
 		Mail.Html = EmailsArray[2]
@@ -310,17 +310,17 @@ func EVMailImapConnect(Server string, Port int, Pem string, Key string) (*tls.Co
 	if err != nil {
 		return nil, "", err
 	}
-	//log.Println("client: connected to: ", conn.RemoteAddr())
+	//evlog.Println("client: connected to: ", conn.RemoteAddr())
 	state := conn.ConnectionState()
-	//log.Printf("%v",state)
+	//evlog.Printf("%v",state)
 	for _, v := range state.PeerCertificates {
 		fmt.Println("Client: Server public key is:")
 		fmt.Println(x509.MarshalPKIXPublicKey(v.PublicKey))
 	}
-	//log.Println("client: handshake: ", state.HandshakeComplete)
-	//log.Println("client: mutual: ", state.NegotiatedProtocolIsMutual)
+	//evlog.Println("client: handshake: ", state.HandshakeComplete)
+	//evlog.Println("client: mutual: ", state.NegotiatedProtocolIsMutual)
 	serverResponse, _ := EVMailImapReadServerMessage(conn)
-	log.Print(serverResponse)
+	evlog.Print(serverResponse)
 	return conn, serverResponse, nil
 }
 
@@ -329,7 +329,7 @@ func EVMailImapLogin(conn *tls.Conn, UserName string, Password string) string {
 	LoginServerMessage := strings.Join([]string{".", " ", "LOGIN", " ", UserName, " ", Password, "\r\n"}, "")
 	EVMailImapSendServerMessage(conn, LoginServerMessage)
 	loginResponse, _ := EVMailImapReadServerMessage(conn)
-	log.Print(loginResponse)
+	evlog.Print(loginResponse)
 	return loginResponse
 }
 
@@ -399,7 +399,7 @@ func EVMailImapParseMailHeader(MessageHeaderRaw string, Header string) string {
 
 func EVMailImapGetRawMailBoxMessageHeader(conn *tls.Conn, MailId int) string {
 	FetchServerMessage := strings.Join([]string{".", "FETCH", strconv.Itoa(MailId), "BODY[HEADER]\r\n"}, " ")
-	log.Print(FetchServerMessage)
+	evlog.Print(FetchServerMessage)
 	EVMailImapSendServerMessage(conn, FetchServerMessage)
 	MessageHeaderRaw, _ := EVMailImapReadMailBoxMessagesHeader(conn)
 	return MessageHeaderRaw
@@ -448,11 +448,11 @@ func EVMailImapGetMessageById(conn *tls.Conn, MailBoxPath string, MailId int) *E
 	SelectMailBoxServerMessage := strings.Join([]string{".", "SELECT", MailBoxPath}, " ")
 	EVMailImapSendServerMessage(conn, SelectMailBoxServerMessage)
 	SelectResponse, _ := EVMailImapReadServerMessage(conn)
-	log.Print(SelectResponse)
+	evlog.Print(SelectResponse)
 	if SelectResponse == "" {
 	}
 	FetchServerMessage := strings.Join([]string{".", "FETCH", strconv.Itoa(MailId), "BODY[TEXT]\r\n"}, " ")
-	log.Print(FetchServerMessage)
+	evlog.Print(FetchServerMessage)
 	EVMailImapSendServerMessage(conn, FetchServerMessage)
 	MessageObj, _ := EVMailImapReadEmailMessage(conn, MailId)
 	var ImapEmailMessage *EVMailImapEmail

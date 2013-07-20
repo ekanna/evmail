@@ -6,9 +6,9 @@ package evmail
 
 import (
 	"errors"
+	"github.com/evalgo/evlog"
 	"github.com/evalgo/evmessage"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -42,7 +42,7 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 
 	files := evmessage.NewEVMessageFiles()
 	for key, _ := range r.MultipartForm.File {
-		log.Println(key)
+		evlog.Println(key)
 		f := evmessage.NewEVMessageFile()
 		File, FileHeader, _ := r.FormFile(key)
 		f.Name = FileHeader.Filename
@@ -80,12 +80,12 @@ func (mail *EVMailEmail) EVMessageHttpRpcHandleResponse(w http.ResponseWriter, r
 	extension := filepath.Ext(requestUrlPath)
 	switch extension {
 	case ".xml":
-		log.Println("response format is XML")
+		evlog.Println("response format is XML")
 		return responseMsg.ToXml()
 	case ".json":
-		log.Println("response format is JSON")
+		evlog.Println("response format is JSON")
 		return responseMsg.ToJson()
 	}
-	log.Println("response format is XML (default)")
+	evlog.Println("response format is XML (default)")
 	return responseMsg.ToXml()
 }
