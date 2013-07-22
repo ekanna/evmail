@@ -7,9 +7,10 @@ package main
 import (
 	"github.com/evalgo/evapi"
 	"github.com/evalgo/evapplication"
+	"github.com/evalgo/everror"
+	"github.com/evalgo/evlog"
 	"github.com/evalgo/evmail"
 	"github.com/evalgo/evmonitor"
-	"log"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -17,47 +18,47 @@ import (
 )
 
 func main() {
-	mail := evmail.NewEVMailEmail()
-	gobObjects := evapplication.NewEVApplicationGobRegisteredObjects()
+	mail := evmail.NewEmail()
+	gobObjects := evapplication.NewGobRegisteredObjects()
 	gobObjects.Append(mail)
-	gobObjects.Append(evmail.NewEVMailImapEmail())
-	gobObjects.Append(evmail.NewEVMailImapMailBoxes())
-	gobObjects.Append(evmail.NewEVMailImapEmailHeader())
-	gobObjects.Append(evmail.NewEVMailImapMailBoxInformation())
-	gobObjects.Append(evmail.NewEVMailImapMailBoxAllMessages())
+	gobObjects.Append(evmail.NewImapEmail())
+	gobObjects.Append(evmail.NewImapMailBoxes())
+	gobObjects.Append(evmail.NewImapEmailHeader())
+	gobObjects.Append(evmail.NewImapMailBoxInformation())
+	gobObjects.Append(evmail.NewImapMailBoxAllMessages())
 	gobObjects.RegisterAll()
 	rpc.Register(mail)
 	rpc.HandleHTTP()
 	var ip string = ""
-	ip, err := evapi.EVApiHostIp()
+	ip, err := evapi.HostIp()
 	if err != nil {
-		log.Println("warning:", err)
+		evlog.Println("warning:", everror.NewFromError(err))
 		ip = "127.0.0.1"
 	}
-	service := evmonitor.NewEVMonitorService()
+	service := evmonitor.NewService()
 	service.Ip = ip
-	hostname, err := evapi.EVApiHostName()
+	hostname, err := evapi.HostName()
 	if err != nil {
-		log.Println("warning:", err)
+		evlog.Println("warning:", everror.NewFromError(err))
 	}
 	service.Name = hostname
-	service.Port = evapi.EVApiPortEVeMail
+	service.Port = evapi.PortEVeMail
 	service.Type = "evemail-rpc"
-	log.Println("register evemail-rpc to monitoring...")
-	_, err = evmonitor.EVMonitorRegisterService(service.Ip, service.Name, service.Ip, evapi.EVApiPortRedis, service)
+	evlog.Println("register evemail-rpc to monitoring...")
+	_, err = evmonitor.RegisterService(service.Ip, service.Name, service.Ip, evapi.PortRedis, service)
 	if err != nil {
-		log.Println("warning:", err)
+		evlog.Println("warning:", everror.NewFromError(err))
 	}
-	log.Println("starting evemail-rpc on  " + ip + ":" + strconv.Itoa(evapi.EVApiPortEVeMail) + "...")
-	l, e := net.Listen("tcp", ip+":"+strconv.Itoa(evapi.EVApiPortEVeMail))
+	evlog.Println("starting evemail-rpc on  " + ip + ":" + strconv.Itoa(evapi.PortEVeMail) + "...")
+	l, e := net.Listen("tcp", ip+":"+strconv.Itoa(evapi.PortEVeMail))
 	if e != nil {
-		log.Println("delete evemail-rpc from monitoring...")
-		_, err := evmonitor.EVMonitorDeleteService(service.Ip, service.Name, service.Ip, evapi.EVApiPortRedis, service)
+		evlog.Println("delete evemail-rpc from monitoring...")
+		_, err := evmonitor.DeleteService(service.Ip, service.Name, service.Ip, evapi.PortRedis, service)
 		if err != nil {
-			log.Println("warning:", err)
+			evlog.Println("warning:", everror.NewFromError(err))
 		}
 
-		log.Fatal("listen error:", e)
+		evlog.Fatal("listen error:", everror.NewFromError(e))
 	}
 	http.Serve(l, nil)
 }
