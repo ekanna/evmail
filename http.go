@@ -14,22 +14,22 @@ import (
 	"strings"
 )
 
-var EVMailVersion string = "v1"
+var Version string = "v1"
 
-func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, *evmessage.EVMessage, string, error) {
-	requestMsg, responseMsg := evmessage.EVMessageRpcClientInitialize("evmail")
-	request, err := requestMsg.Body("requests").(*evmessage.EVMessageRequests).ById("evmail")
+func (mail *Email) createSendMail(r *http.Request) (*evmessage.Message, *evmessage.Message, string, error) {
+	requestMsg, responseMsg := evmessage.RpcClientInitialize("evmail")
+	request, err := requestMsg.Body("requests").(*evmessage.Requests).ById("evmail")
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	if r.FormValue("request_id") == "" {
-		err = everror.New("request_id is empty for service EVMail createSendMail")
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		err = everror.New("request_id is empty for service  createSendMail")
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return nil, responseMsg, "", everror.NewFromError(err)
 	}
 	request.Id = r.FormValue("request_id")
-	kvs := evmessage.NewEVMessageKeyValues()
+	kvs := evmessage.NewKeyValues()
 
 	kvs.Append("user", r.FormValue("user"))
 	kvs.Append("password", r.FormValue("password"))
@@ -40,10 +40,10 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 	kvs.Append("subject", r.FormValue("subject"))
 	kvs.Append("message", r.FormValue("message"))
 
-	files := evmessage.NewEVMessageFiles()
+	files := evmessage.NewFiles()
 	for key, _ := range r.MultipartForm.File {
 		evlog.Println(key)
-		f := evmessage.NewEVMessageFile()
+		f := evmessage.NewFile()
 		File, FileHeader, _ := r.FormFile(key)
 		f.Name = FileHeader.Filename
 		fContent, _ := ioutil.ReadAll(File)
@@ -54,16 +54,16 @@ func (mail *EVMailEmail) createSendMail(r *http.Request) (*evmessage.EVMessage, 
 
 	request.AppendToBody(files)
 	request.AppendToBody(kvs)
-	requestMsg.Body("requests").(*evmessage.EVMessageRequests).InProgress = request
-	return requestMsg, responseMsg, "EVMailEmail.RpcSend", nil
+	requestMsg.Body("requests").(*evmessage.Requests).InProgress = request
+	return requestMsg, responseMsg, "Email.RpcSend", nil
 }
 
-func (mail *EVMailEmail) EVMessageHttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) (*evmessage.EVMessage, *evmessage.EVMessage, string, error) {
+func (mail *Email) HttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) (*evmessage.Message, *evmessage.Message, string, error) {
 	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
 	extension := filepath.Ext(requestUrlPath)
 	requestUrlPath = strings.Replace(requestUrlPath, extension, "", 1)
 	switch requestUrlPath {
-	case "/" + EVMailVersion + "/emails", "/emails":
+	case "/" + Version + "/emails", "/emails":
 		switch r.Method {
 		case "POST":
 			return mail.createSendMail(r)
@@ -75,7 +75,7 @@ func (mail *EVMailEmail) EVMessageHttpCreateRpcMessage(w http.ResponseWriter, r 
 	}
 }
 
-func (mail *EVMailEmail) EVMessageHttpRpcHandleResponse(w http.ResponseWriter, r *http.Request, responseMsg *evmessage.EVMessage) ([]byte, error) {
+func (mail *Email) HttpRpcHandleResponse(w http.ResponseWriter, r *http.Request, responseMsg *evmessage.Message) ([]byte, error) {
 	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
 	extension := filepath.Ext(requestUrlPath)
 	switch extension {

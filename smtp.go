@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func (Mail *EVMailEmail) Send() error {
+func (Mail *Email) Send() error {
 	var recipients = ""
 	boundary := "f46d043c813270fc6b04c2d223da"
 	for _, i := range Mail.To {
@@ -58,7 +58,7 @@ func (Mail *EVMailEmail) Send() error {
 	return everror.NewFromError(err)
 }
 
-func (Mail *EVMailEmail) Attach(file string) error {
+func (Mail *Email) Attach(file string) error {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
 		return everror.NewFromError(err)

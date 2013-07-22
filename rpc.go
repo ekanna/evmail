@@ -12,30 +12,30 @@ import (
 	"strings"
 )
 
-func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *evmessage.EVMessage) error {
+func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage.Message) error {
 	*responseMsg = *requestMsg
-	responseMsg, err := evmessage.EVMessageRpcServiceInitialize(requestMsg, responseMsg)
+	responseMsg, err := evmessage.RpcServiceInitialize(requestMsg, responseMsg)
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
-	request := requestMsg.Body("requests").(*evmessage.EVMessageRequests).InProgress
-	respObj := evmessage.NewEVMessageResponse()
+	request := requestMsg.Body("requests").(*evmessage.Requests).InProgress
+	respObj := evmessage.NewResponse()
 	if request == nil {
 		err = everror.New("there is no Requests.InProgress request set!")
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	respObj.Id = request.Id
 	respObj.Order = request.Order
-	kValues := request.Body("keyvalues").(*evmessage.EVMessageKeyValues)
-	email := NewEVMailEmail()
+	kValues := request.Body("keyvalues").(*evmessage.KeyValues)
+	email := NewEmail()
 	email.User = kValues.ByKey("user")
 	email.Password = kValues.ByKey("password")
 	email.Server = kValues.ByKey("server")
 	port, err := strconv.Atoi(kValues.ByKey("port"))
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
 	email.Port = port
@@ -43,28 +43,28 @@ func (mail *EVMailEmail) RpcSend(requestMsg *evmessage.EVMessage, responseMsg *e
 	email.From = kValues.ByKey("from")
 	email.Subject = kValues.ByKey("subject")
 	email.Body = kValues.ByKey("message")
-	files := request.Body("files").(*evmessage.EVMessageFiles)
+	files := request.Body("files").(*evmessage.Files)
 	if files != nil {
 		for _, f := range files.Files {
 			evlog.Println("sending attachment:", f.Name)
 			f.DecodeBase64()
 			err := f.WriteFile("/tmp")
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 				return everror.NewFromError(err)
 			}
 			err = email.Attach("/tmp/" + f.Name)
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 				return everror.NewFromError(err)
 			}
 		}
 	}
 	err = email.Send()
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.EVMessageErrors).Append(everror.NewFromError(err))
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
-	responseMsg.Body("responses").(*evmessage.EVMessageResponses).Append(respObj)
+	responseMsg.Body("responses").(*evmessage.Responses).Append(respObj)
 	return nil
 }

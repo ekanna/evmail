@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-type EVMailEmail struct {
+type Email struct {
 	Server      string   `xml:"Server"`
 	Port        int      `xml:"Port"`
 	User        string   `xml:"User"`
@@ -30,25 +30,25 @@ type EVMailEmail struct {
 	Attachments map[string][]byte
 }
 
-func NewEVMailEmail() *EVMailEmail {
-	email := new(EVMailEmail)
+func NewEmail() *Email {
+	email := new(Email)
 	email.Attachments = make(map[string][]byte, 0)
 	return email
 }
 
-func (mail *EVMailEmail) EVName() string {
+func (mail *Email) EVName() string {
 	return "evmail"
 }
 
-type EVMailImapEmail struct {
-	Id   int          `xml:"Id"`
-	Body *EVMailEmail `xml:"Body"`
+type ImapEmail struct {
+	Id   int    `xml:"Id"`
+	Body *Email `xml:"Body"`
 }
 
-func NewEVMailImapEmail() *EVMailImapEmail {
-	email := new(EVMailImapEmail)
+func NewImapEmail() *ImapEmail {
+	email := new(ImapEmail)
 	email.Id = 0
-	email.Body = NewEVMailEmail()
+	email.Body = NewEmail()
 	return email
 }
 
@@ -57,7 +57,7 @@ type superPlainAuth struct {
 	Password string `xml:"Password"`
 }
 
-type EVMailImapMailBoxInformation struct {
+type ImapMailBoxInformation struct {
 	Flags       []string `xml:"Flags>Flag"`
 	Mails       int      `xml:"Mails"`
 	Recent      int      `xml:"Recent"`
@@ -65,8 +65,8 @@ type EVMailImapMailBoxInformation struct {
 	Path        string   `xml:"Path"`
 }
 
-func NewEVMailImapMailBoxInformation() *EVMailImapMailBoxInformation {
-	info := new(EVMailImapMailBoxInformation)
+func NewImapMailBoxInformation() *ImapMailBoxInformation {
+	info := new(ImapMailBoxInformation)
 	info.Flags = make([]string, 0)
 	info.Mails = 0
 	info.Recent = 0
@@ -75,17 +75,17 @@ func NewEVMailImapMailBoxInformation() *EVMailImapMailBoxInformation {
 	return info
 }
 
-type EVMailImapMailBoxes struct {
-	MailBoxes []EVMailImapMailBoxInformation `xml:"Mailboxes>Mailbox"`
+type ImapMailBoxes struct {
+	MailBoxes []ImapMailBoxInformation `xml:"Mailboxes>Mailbox"`
 }
 
-func NewEVMailImapMailBoxes() *EVMailImapMailBoxes {
-	mBoxes := new(EVMailImapMailBoxes)
-	mBoxes.MailBoxes = make([]EVMailImapMailBoxInformation, 0)
+func NewImapMailBoxes() *ImapMailBoxes {
+	mBoxes := new(ImapMailBoxes)
+	mBoxes.MailBoxes = make([]ImapMailBoxInformation, 0)
 	return mBoxes
 }
 
-type EVMailImapEmailHeader struct {
+type ImapEmailHeader struct {
 	Id                    int    `xml:"Id"`
 	DeliverdTo            string `xml:"DeliverdTo"`
 	Received              string `xml:"Received"`
@@ -102,8 +102,8 @@ type EVMailImapEmailHeader struct {
 	XGmMessageState       string `xml:"X-Gm-Message-State"`
 }
 
-func NewEVMailImapEmailHeader() *EVMailImapEmailHeader {
-	emailH := new(EVMailImapEmailHeader)
+func NewImapEmailHeader() *ImapEmailHeader {
+	emailH := new(ImapEmailHeader)
 	emailH.Id = 0
 	emailH.DeliverdTo = ""
 	emailH.Received = ""
@@ -121,17 +121,17 @@ func NewEVMailImapEmailHeader() *EVMailImapEmailHeader {
 	return emailH
 }
 
-type EVMailImapMailBoxAllMessages struct {
-	Headers []EVMailImapEmailHeader `xml:"Headers>Header"`
+type ImapMailBoxAllMessages struct {
+	Headers []ImapEmailHeader `xml:"Headers>Header"`
 }
 
-func NewEVMailImapMailBoxAllMessages() *EVMailImapMailBoxAllMessages {
-	allM := new(EVMailImapMailBoxAllMessages)
-	allM.Headers = make([]EVMailImapEmailHeader, 0)
+func NewImapMailBoxAllMessages() *ImapMailBoxAllMessages {
+	allM := new(ImapMailBoxAllMessages)
+	allM.Headers = make([]ImapEmailHeader, 0)
 	return allM
 }
 
-func EVMailImapSendServerMessage(conn *tls.Conn, message string) (string, error) {
+func ImapSendServerMessage(conn *tls.Conn, message string) (string, error) {
 	n, err := io.WriteString(conn, message)
 	if err != nil {
 		evlog.Fatalf("client: write:%v::%s", n, everror.NewFromError(err))
@@ -139,13 +139,13 @@ func EVMailImapSendServerMessage(conn *tls.Conn, message string) (string, error)
 	return "", nil
 }
 
-func EVMailImapReadServerMessage(conn *tls.Conn) (string, int) {
+func ImapReadServerMessage(conn *tls.Conn) (string, int) {
 	replyMessage := make([]byte, 4096)
 	sn, _ := conn.Read(replyMessage)
 	return string(replyMessage[:sn]), sn
 }
 
-func EVMailImapReadMailBoxMessagesHeader(conn *tls.Conn) (string, error) {
+func ImapReadMailBoxMessagesHeader(conn *tls.Conn) (string, error) {
 	replyHeader := make([]byte, 4096)
 	replyString := ""
 	for {
@@ -159,12 +159,12 @@ func EVMailImapReadMailBoxMessagesHeader(conn *tls.Conn) (string, error) {
 	return replyString, nil
 }
 
-func EVMailImapGetAllMailboxes(conn *tls.Conn, Path string) []string {
+func ImapGetAllMailboxes(conn *tls.Conn, Path string) []string {
 	AllMailBoxes := make([]string, 0)
 	PathOnTheServer := strings.Join([]string{"\"", Path, "\""}, "")
 	ServerRequestMessage := strings.Join([]string{".", "LIST", PathOnTheServer, "\"*\"\r\n"}, " ")
-	EVMailImapSendServerMessage(conn, ServerRequestMessage)
-	AllMailBoxesString, _ := EVMailImapReadServerMessage(conn)
+	ImapSendServerMessage(conn, ServerRequestMessage)
+	AllMailBoxesString, _ := ImapReadServerMessage(conn)
 	evlog.Print(AllMailBoxesString)
 	AllMailBoxesRaw := strings.Split(AllMailBoxesString, "\r\n")
 	for _, MailBoxRaw := range AllMailBoxesRaw {
@@ -181,7 +181,7 @@ func EVMailImapGetAllMailboxes(conn *tls.Conn, Path string) []string {
 	return AllMailBoxes
 }
 
-func EVMailImapGetMailBoxInformation(conn *tls.Conn, Path string) *EVMailImapMailBoxInformation {
+func ImapGetMailBoxInformation(conn *tls.Conn, Path string) *ImapMailBoxInformation {
 	if Path == "/" {
 		evlog.Fatal("There is no Information available for the Server Root Directory")
 	}
@@ -190,10 +190,10 @@ func EVMailImapGetMailBoxInformation(conn *tls.Conn, Path string) *EVMailImapMai
 	evlog.Print(TrimedPath)
 	RequestServerMessage := strings.Join([]string{".", "SELECT", TrimedPath}, " ")
 	evlog.Print(RequestServerMessage)
-	EVMailImapSendServerMessage(conn, RequestServerMessage)
-	ResponseMessage, _ := EVMailImapReadServerMessage(conn)
+	ImapSendServerMessage(conn, RequestServerMessage)
+	ResponseMessage, _ := ImapReadServerMessage(conn)
 
-	ImapMailBoxInfo := NewEVMailImapMailBoxInformation()
+	ImapMailBoxInfo := NewImapMailBoxInformation()
 
 	if strings.Contains(ResponseMessage, "[NONEXISTENT]") {
 		ImapMailBoxInfo.Flags = make([]string, 0)
@@ -221,37 +221,37 @@ func EVMailImapGetMailBoxInformation(conn *tls.Conn, Path string) *EVMailImapMai
 	return ImapMailBoxInfo
 }
 
-func EVMailImapGetMailBoxesInformation(conn *tls.Conn) *EVMailImapMailBoxes {
-	MailBoxesInfo := NewEVMailImapMailBoxes()
-	MailBoxes := EVMailImapGetAllMailboxes(conn, "/")
+func ImapGetMailBoxesInformation(conn *tls.Conn) *ImapMailBoxes {
+	MailBoxesInfo := NewImapMailBoxes()
+	MailBoxes := ImapGetAllMailboxes(conn, "/")
 	for _, MailBoxPath := range MailBoxes {
-		MailBoxInfo := EVMailImapGetMailBoxInformation(conn, MailBoxPath)
+		MailBoxInfo := ImapGetMailBoxInformation(conn, MailBoxPath)
 		MailBoxesInfo.MailBoxes = append(MailBoxesInfo.MailBoxes, *MailBoxInfo)
 	}
 	return MailBoxesInfo
 }
 
-func EVMailCheckRegExpString(Expression string, String string) string {
+func CheckRegExpString(Expression string, String string) string {
 	RegExp, _ := regexp.Compile(Expression)
 	match := RegExp.FindString(String)
 	evlog.Printf("matched::::%v", match)
 	return match
 }
 
-func EVMailImapEmailSplitBoundary(EmailString string, conn *tls.Conn, MailId int) *EVMailEmail {
+func ImapEmailSplitBoundary(EmailString string, conn *tls.Conn, MailId int) *Email {
 	evlog.Print(EmailString)
-	MessageHeaderRaw := EVMailImapGetRawMailBoxMessageHeader(conn, MailId)
+	MessageHeaderRaw := ImapGetRawMailBoxMessageHeader(conn, MailId)
 	// todo: check if this 2 information are important
 	//ImapParseMailHeader(MessageHeaderRaw, "Date: ")
 	//ImapParseMailHeader(MessageHeaderRaw, "Content-Type: ")
-	Mail := NewEVMailEmail()
+	Mail := NewEmail()
 	Mail.Server = "smtp.google.com"
 	Mail.Port = 587
 	Mail.User = "projects.notification@evalgo.com"
 	Mail.Password = "IbeT2012"
-	Mail.From = EVMailImapParseMailHeader(MessageHeaderRaw, "From: ")
-	Mail.To = []string{EVMailImapParseMailHeader(MessageHeaderRaw, "To: ")}
-	Mail.Subject = EVMailImapParseMailHeader(MessageHeaderRaw, "Subject: ")
+	Mail.From = ImapParseMailHeader(MessageHeaderRaw, "From: ")
+	Mail.To = []string{ImapParseMailHeader(MessageHeaderRaw, "To: ")}
+	Mail.Subject = ImapParseMailHeader(MessageHeaderRaw, "Subject: ")
 	Mail.Raw = EmailString
 	MailBodyArray := strings.Split(EmailString, "\n")
 	evlog.Printf("%v", MailBodyArray)
@@ -269,7 +269,7 @@ func EVMailImapEmailSplitBoundary(EmailString string, conn *tls.Conn, MailId int
 	return Mail
 }
 
-func EVMailImapReadEmailMessage(conn *tls.Conn, MailId int) (*EVMailEmail, error) {
+func ImapReadEmailMessage(conn *tls.Conn, MailId int) (*Email, error) {
 	replyHeader := make([]byte, 4096)
 	replyString := ""
 	for {
@@ -278,27 +278,27 @@ func EVMailImapReadEmailMessage(conn *tls.Conn, MailId int) (*EVMailEmail, error
 		replyString = strings.Join([]string{replyString, replyMessage}, "")
 		if true == strings.Contains(replyString, strings.Join([]string{".", "OK", "Success"}, " ")) {
 			// check for fetch imap response
-			FetchCommand := EVMailCheckRegExpString(".+ FETCH \\(BODY\\[TEXT\\] {[0-9].+}", replyString)
+			FetchCommand := CheckRegExpString(".+ FETCH \\(BODY\\[TEXT\\] {[0-9].+}", replyString)
 			if FetchCommand != "" {
 				replyString = strings.Replace(replyString, FetchCommand, "", -1)
 			}
 			// check for ending imap response success message
-			SuccessCaseOne := EVMailCheckRegExpString("\015\012\\)\015\012. OK Success", replyString)
+			SuccessCaseOne := CheckRegExpString("\015\012\\)\015\012. OK Success", replyString)
 			if SuccessCaseOne != "" {
 				replyString = strings.Replace(replyString, SuccessCaseOne, "", -1)
 			}
 			// check for ending imap response success message
-			SuccessCaseTwo := EVMailCheckRegExpString("\\)\015\012. OK Success", replyString)
+			SuccessCaseTwo := CheckRegExpString("\\)\015\012. OK Success", replyString)
 			if SuccessCaseTwo != "" {
 				replyString = strings.Replace(replyString, SuccessCaseTwo, "", -1)
 			}
-			return EVMailImapEmailSplitBoundary(replyString, conn, MailId), nil
+			return ImapEmailSplitBoundary(replyString, conn, MailId), nil
 		}
 	}
-	return EVMailImapEmailSplitBoundary(replyString, conn, MailId), nil
+	return ImapEmailSplitBoundary(replyString, conn, MailId), nil
 }
 
-func EVMailImapConnect(Server string, Port int, Pem string, Key string) (*tls.Conn, string, error) {
+func ImapConnect(Server string, Port int, Pem string, Key string) (*tls.Conn, string, error) {
 	cert, err := tls.LoadX509KeyPair(Pem, Key)
 	if err != nil {
 		return nil, "", everror.NewFromError(err)
@@ -320,21 +320,21 @@ func EVMailImapConnect(Server string, Port int, Pem string, Key string) (*tls.Co
 	}
 	//evlog.Println("client: handshake: ", state.HandshakeComplete)
 	//evlog.Println("client: mutual: ", state.NegotiatedProtocolIsMutual)
-	serverResponse, _ := EVMailImapReadServerMessage(conn)
+	serverResponse, _ := ImapReadServerMessage(conn)
 	evlog.Print(serverResponse)
 	return conn, serverResponse, nil
 }
 
-func EVMailImapLogin(conn *tls.Conn, UserName string, Password string) string {
+func ImapLogin(conn *tls.Conn, UserName string, Password string) string {
 	// send login message
 	LoginServerMessage := strings.Join([]string{".", " ", "LOGIN", " ", UserName, " ", Password, "\r\n"}, "")
-	EVMailImapSendServerMessage(conn, LoginServerMessage)
-	loginResponse, _ := EVMailImapReadServerMessage(conn)
+	ImapSendServerMessage(conn, LoginServerMessage)
+	loginResponse, _ := ImapReadServerMessage(conn)
 	evlog.Print(loginResponse)
 	return loginResponse
 }
 
-func EVMailImapParseMailHeader(MessageHeaderRaw string, Header string) string {
+func ImapParseMailHeader(MessageHeaderRaw string, Header string) string {
 	//!!!!!DO NOT DELETE THIS COMMENT BELOW!!!!!!!
 	//RegularRule := "[0-9.+A-Z.+a-z.+].+\n" !!!!!
 	//!!!!!----DO NOT DELETE THIS COMMENT ---!!!!!
@@ -398,17 +398,17 @@ func EVMailImapParseMailHeader(MessageHeaderRaw string, Header string) string {
 	return ""
 }
 
-func EVMailImapGetRawMailBoxMessageHeader(conn *tls.Conn, MailId int) string {
+func ImapGetRawMailBoxMessageHeader(conn *tls.Conn, MailId int) string {
 	FetchServerMessage := strings.Join([]string{".", "FETCH", strconv.Itoa(MailId), "BODY[HEADER]\r\n"}, " ")
 	evlog.Print(FetchServerMessage)
-	EVMailImapSendServerMessage(conn, FetchServerMessage)
-	MessageHeaderRaw, _ := EVMailImapReadMailBoxMessagesHeader(conn)
+	ImapSendServerMessage(conn, FetchServerMessage)
+	MessageHeaderRaw, _ := ImapReadMailBoxMessagesHeader(conn)
 	return MessageHeaderRaw
 }
 
-func EVMailImapGetMailBoxMessageHeader(conn *tls.Conn, MailId int) *EVMailImapEmailHeader {
-	MessageHeaderRaw := EVMailImapGetRawMailBoxMessageHeader(conn, MailId)
-	HeaderInformation := NewEVMailImapEmailHeader()
+func ImapGetMailBoxMessageHeader(conn *tls.Conn, MailId int) *ImapEmailHeader {
+	MessageHeaderRaw := ImapGetRawMailBoxMessageHeader(conn, MailId)
+	HeaderInformation := NewImapEmailHeader()
 	HeaderInformation.Id = MailId
 	/* Avaiable Options *
 	++++++++++++++++++++
@@ -427,45 +427,45 @@ func EVMailImapGetMailBoxMessageHeader(conn *tls.Conn, MailId int) *EVMailImapEm
 	- Content-Type
 	- X-Gm-Message-State
 	*+++++++++++++++++++*/
-	HeaderInformation.From = EVMailImapParseMailHeader(MessageHeaderRaw, "From: ")
-	HeaderInformation.To = EVMailImapParseMailHeader(MessageHeaderRaw, "To: ")
-	HeaderInformation.Subject = EVMailImapParseMailHeader(MessageHeaderRaw, "Subject: ")
-	HeaderInformation.Date = EVMailImapParseMailHeader(MessageHeaderRaw, "Date: ")
-	HeaderInformation.ContentType = EVMailImapParseMailHeader(MessageHeaderRaw, "Content-Type: ")
+	HeaderInformation.From = ImapParseMailHeader(MessageHeaderRaw, "From: ")
+	HeaderInformation.To = ImapParseMailHeader(MessageHeaderRaw, "To: ")
+	HeaderInformation.Subject = ImapParseMailHeader(MessageHeaderRaw, "Subject: ")
+	HeaderInformation.Date = ImapParseMailHeader(MessageHeaderRaw, "Date: ")
+	HeaderInformation.ContentType = ImapParseMailHeader(MessageHeaderRaw, "Content-Type: ")
 	return HeaderInformation
 }
 
-func EVMailImapGetAllMailBoxMessageHeader(conn *tls.Conn, MailBox *EVMailImapMailBoxInformation) (*EVMailImapMailBoxAllMessages, error) {
-	MailBoxAllMessages := NewEVMailImapMailBoxAllMessages()
+func ImapGetAllMailBoxMessageHeader(conn *tls.Conn, MailBox *ImapMailBoxInformation) (*ImapMailBoxAllMessages, error) {
+	MailBoxAllMessages := NewImapMailBoxAllMessages()
 	for i := 1; i < (MailBox.Mails + 1); i++ {
-		HeaderInformation := EVMailImapGetMailBoxMessageHeader(conn, i)
+		HeaderInformation := ImapGetMailBoxMessageHeader(conn, i)
 		MailBoxAllMessages.Headers = append(MailBoxAllMessages.Headers, *HeaderInformation)
 	}
 	return MailBoxAllMessages, nil
 }
 
-func EVMailImapGetMessageById(conn *tls.Conn, MailBoxPath string, MailId int) *EVMailImapEmail {
+func ImapGetMessageById(conn *tls.Conn, MailBoxPath string, MailId int) *ImapEmail {
 	MailBoxPath += "\r\n"
 	SelectMailBoxServerMessage := strings.Join([]string{".", "SELECT", MailBoxPath}, " ")
-	EVMailImapSendServerMessage(conn, SelectMailBoxServerMessage)
-	SelectResponse, _ := EVMailImapReadServerMessage(conn)
+	ImapSendServerMessage(conn, SelectMailBoxServerMessage)
+	SelectResponse, _ := ImapReadServerMessage(conn)
 	evlog.Print(SelectResponse)
 	if SelectResponse == "" {
 	}
 	FetchServerMessage := strings.Join([]string{".", "FETCH", strconv.Itoa(MailId), "BODY[TEXT]\r\n"}, " ")
 	evlog.Print(FetchServerMessage)
-	EVMailImapSendServerMessage(conn, FetchServerMessage)
-	MessageObj, _ := EVMailImapReadEmailMessage(conn, MailId)
-	var ImapEmailMessage *EVMailImapEmail
-	ImapEmailMessage = NewEVMailImapEmail()
+	ImapSendServerMessage(conn, FetchServerMessage)
+	MessageObj, _ := ImapReadEmailMessage(conn, MailId)
+	var ImapEmailMessage *ImapEmail
+	ImapEmailMessage = NewImapEmail()
 	ImapEmailMessage.Id = MailId
 	ImapEmailMessage.Body = MessageObj
 	return ImapEmailMessage
 }
 
-func EVMailImapLogout(conn *tls.Conn) string {
-	EVMailImapSendServerMessage(conn, ". LOGOUT\r\n")
-	LogoutResponse, _ := EVMailImapReadServerMessage(conn)
+func ImapLogout(conn *tls.Conn) string {
+	ImapSendServerMessage(conn, ". LOGOUT\r\n")
+	LogoutResponse, _ := ImapReadServerMessage(conn)
 	conn.Close()
 	return LogoutResponse
 }
