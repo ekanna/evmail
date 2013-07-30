@@ -63,7 +63,7 @@ func (mail *Email) HttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) 
 	extension := filepath.Ext(requestUrlPath)
 	requestUrlPath = strings.Replace(requestUrlPath, extension, "", 1)
 	switch requestUrlPath {
-	case "/" + Version + "/emails", "/emails":
+	case "/" + Version + "/evemail/emails", "/evemail/emails":
 		switch r.Method {
 		case "POST":
 			return mail.createSendMail(r)
