@@ -71,7 +71,7 @@ func (mail *Email) HttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) 
 			return nil, nil, "", everror.New("the given request method+" + r.Method + " is not supported")
 		}
 	default:
-		return nil, nil, "", everror.New("...")
+		return nil, nil, "", everror.New("URL path <" + r.URL.Path + "> is not supported!")
 	}
 }
 
