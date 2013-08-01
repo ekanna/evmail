@@ -55,7 +55,10 @@ func (Mail *Email) Send() error {
 		Mail.From,
 		Mail.To,
 		content.Bytes())
-	return everror.NewFromError(err)
+	if err != nil {
+		return everror.NewFromError(err)
+	}
+	return nil
 }
 
 func (Mail *Email) Attach(file string) error {
