@@ -65,6 +65,7 @@ func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage
 		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
 		return everror.NewFromError(err)
 	}
+	respObj.AppendToBody(email)
 	responseMsg.Body("responses").(*evmessage.Responses).Append(respObj)
 	return nil
 }
