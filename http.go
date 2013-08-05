@@ -89,3 +89,7 @@ func (mail *Email) HttpRpcHandleResponse(w http.ResponseWriter, r *http.Request,
 	evlog.Println("response format is XML (default)")
 	return responseMsg.ToXml()
 }
+
+func (mail *Email) HttpCreateRequest(vars map[string]string, r *evmessage.Request) (*evmessage.Request, error) {
+	return r, nil
+}
