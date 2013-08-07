@@ -2,6 +2,8 @@
 // See the LICENSE file at the top-level directory of this distribution
 // and at http://opensource.org/licenses/bsd-license.php
 
+// TODO finish HttpCreateRequest implementation
+
 package evmail
 
 import (
@@ -16,7 +18,13 @@ import (
 
 var Version string = "v1"
 
-func (mail *Email) createSendMail(r *http.Request) (*evmessage.Message, *evmessage.Message, string, error) {
+type HttpRpcProxy struct{}
+
+func NewHttpRpcProxy() *HttpRpcProxy {
+	return new(HttpRpcProxy)
+}
+
+func (rpcP *HttpRpcProxy) createSendMail(r *http.Request) (*evmessage.Message, *evmessage.Message, string, error) {
 	requestMsg, responseMsg := evmessage.RpcClientInitialize("evmail")
 	request, err := requestMsg.Body("requests").(*evmessage.Requests).ById("evmail")
 	if err != nil {
@@ -58,38 +66,20 @@ func (mail *Email) createSendMail(r *http.Request) (*evmessage.Message, *evmessa
 	return requestMsg, responseMsg, "Email.RpcSend", nil
 }
 
-func (mail *Email) HttpCreateRpcMessage(w http.ResponseWriter, r *http.Request) (*evmessage.Message, *evmessage.Message, string, error) {
-	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
-	extension := filepath.Ext(requestUrlPath)
-	requestUrlPath = strings.Replace(requestUrlPath, extension, "", 1)
-	switch requestUrlPath {
-	case "/" + Version + "/evemail/emails", "/evemail/emails":
-		switch r.Method {
-		case "POST":
-			return mail.createSendMail(r)
-		default:
-			return nil, nil, "", everror.New("the given request method+" + r.Method + " is not supported")
-		}
-	default:
-		return nil, nil, "", everror.New("URL path <" + r.URL.Path + "> is not supported!")
-	}
-}
-
-func (mail *Email) HttpRpcHandleResponse(w http.ResponseWriter, r *http.Request, responseMsg *evmessage.Message) ([]byte, error) {
-	requestUrlPath := strings.TrimRight(r.URL.Path, "/")
-	extension := filepath.Ext(requestUrlPath)
-	switch extension {
-	case ".xml":
-		evlog.Println("response format is XML")
-		return responseMsg.ToXml()
-	case ".json":
-		evlog.Println("response format is JSON")
-		return responseMsg.ToJson()
-	}
-	evlog.Println("response format is XML (default)")
-	return responseMsg.ToXml()
-}
-
-func (mail *Email) HttpCreateRequest(vars map[string]string, r *evmessage.Request) (*evmessage.Request, error) {
+func (rpcP *HttpRpcProxy) HttpCreateRequest(vars map[string]string, r *evmessage.Request) (*evmessage.Request, error) {
+	// requestUrlPath := strings.TrimRight(r.URL.Path, "/")
+	// extension := filepath.Ext(requestUrlPath)
+	// requestUrlPath = strings.Replace(requestUrlPath, extension, "", 1)
+	// switch requestUrlPath {
+	// case "/" + Version + "/evemail/emails", "/evemail/emails":
+	// 	switch r.Method {
+	// 	case "POST":
+	// 		return mail.createSendMail(r)
+	// 	default:
+	// 		return nil, nil, "", everror.New("the given request method+" + r.Method + " is not supported")
+	// 	}
+	// default:
+	// 	return nil, nil, "", everror.New("URL path <" + r.URL.Path + "> is not supported!")
+	// }
 	return r, nil
 }
