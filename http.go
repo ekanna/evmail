@@ -12,8 +12,8 @@ import (
 	"github.com/evalgo/evmessage"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
-	"strings"
+	//"path/filepath"
+	//"strings"
 )
 
 var Version string = "v1"
