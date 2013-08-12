@@ -12,8 +12,22 @@ import (
 	"strings"
 )
 
-func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage.Message) error {
-	*responseMsg = *requestMsg
+func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage.Message) (e error) {
+	evlog.Println("running evemail-rpc.RpcSend ...")
+	defer everror.ResetAllErrors()
+	defer func() {
+		// handle panic
+		if r := recover(); r != nil {
+			everror.NewFromString(r.(error).Error(), everror.FATAL)
+			e = nil
+		}
+		// write all errors to the response message
+		responseMsg = LoadMsgErrors(responseMsg)
+		evlog.Println("ALL ERRORS:", len(everror.AllErrors.Errors))
+	}()
+	evlog.Println("reset all errors...")
+	everror.ResetAllErrors()
+	evlog.Println("starting send ...")
 	responseMsg, err := evmessage.RpcServiceInitialize(requestMsg, responseMsg)
 	if err != nil {
 		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
