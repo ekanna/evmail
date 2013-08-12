@@ -32,14 +32,14 @@ func main() {
 	var ip string = ""
 	ip, err := evapi.HostIp()
 	if err != nil {
-		evlog.Println("warning:", everror.NewFromError(err))
+		evlog.Println("warning:", everror.NewFromError(err, everror.ERROR))
 		ip = "127.0.0.1"
 	}
 	service := evmonitor.NewService()
 	service.Ip = ip
 	hostname, err := evapi.HostName()
 	if err != nil {
-		evlog.Println("warning:", everror.NewFromError(err))
+		evlog.Println("warning:", everror.NewFromError(err, everror.ERROR))
 	}
 	service.Name = hostname
 	service.Port = evapi.PortEVeMail
@@ -47,7 +47,7 @@ func main() {
 	evlog.Println("register evemail-rpc to monitoring...")
 	_, err = evmonitor.RegisterService(service.Ip, service.Name, service.Ip, evapi.PortRedis, service)
 	if err != nil {
-		evlog.Println("warning:", everror.NewFromError(err))
+		evlog.Println("warning:", everror.NewFromError(err, everror.ERROR))
 	}
 	evlog.Println("starting evemail-rpc on  " + ip + ":" + strconv.Itoa(evapi.PortEVeMail) + "...")
 	l, e := net.Listen("tcp", ip+":"+strconv.Itoa(evapi.PortEVeMail))
@@ -55,7 +55,7 @@ func main() {
 		evlog.Println("delete evemail-rpc from monitoring...")
 		_, err := evmonitor.DeleteService(service.Ip, service.Name, service.Ip, evapi.PortRedis, service)
 		if err != nil {
-			evlog.Println("warning:", everror.NewFromError(err))
+			evlog.Println("warning:", everror.NewFromError(err, everror.ERROR))
 		}
 
 		evlog.Fatal("listen error:", everror.NewFromError(e))

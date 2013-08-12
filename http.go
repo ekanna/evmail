@@ -28,13 +28,13 @@ func (rpcP *HttpRpcProxy) createSendMail(r *http.Request) (*evmessage.Message, *
 	requestMsg, responseMsg := evmessage.RpcClientInitialize("evmail")
 	request, err := requestMsg.Body("requests").(*evmessage.Requests).ById("evmail")
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return nil, responseMsg, "", everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return nil, responseMsg, "", everror.NewFromError(err, everror.ERROR)
 	}
 	if r.FormValue("request_id") == "" {
 		err = everror.New("request_id is empty for service  createSendMail")
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return nil, responseMsg, "", everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return nil, responseMsg, "", everror.NewFromError(err, everror.ERROR)
 	}
 	request.Id = r.FormValue("request_id")
 	kvs := evmessage.NewKeyValues()

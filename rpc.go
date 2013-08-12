@@ -16,15 +16,15 @@ func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage
 	*responseMsg = *requestMsg
 	responseMsg, err := evmessage.RpcServiceInitialize(requestMsg, responseMsg)
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return everror.NewFromError(err, everror.ERROR)
 	}
 	request := requestMsg.Body("requests").(*evmessage.Requests).InProgress
 	respObj := evmessage.NewResponse()
 	if request == nil {
 		err = everror.New("there is no Requests.InProgress request set!")
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return everror.NewFromError(err, everror.ERROR)
 	}
 	respObj.Id = request.Id
 	respObj.Order = request.Order
@@ -35,8 +35,8 @@ func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage
 	email.Server = kValues.ByKey("server")
 	port, err := strconv.Atoi(kValues.ByKey("port"))
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return everror.NewFromError(err, everror.ERROR)
 	}
 	email.Port = port
 	email.To = strings.Split(kValues.ByKey("to"), " ")
@@ -50,20 +50,20 @@ func (mail *Email) RpcSend(requestMsg *evmessage.Message, responseMsg *evmessage
 			f.DecodeBase64()
 			err := f.WriteFile("/tmp")
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-				return everror.NewFromError(err)
+				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+				return everror.NewFromError(err, everror.ERROR)
 			}
 			err = email.Attach("/tmp/" + f.Name)
 			if err != nil {
-				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-				return everror.NewFromError(err)
+				responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+				return everror.NewFromError(err, everror.ERROR)
 			}
 		}
 	}
 	err = email.Send()
 	if err != nil {
-		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err))
-		return everror.NewFromError(err)
+		responseMsg.Body("errors").(*evmessage.Errors).Append(everror.NewFromError(err, everror.ERROR))
+		return everror.NewFromError(err, everror.ERROR)
 	}
 	keyValues := evmessage.NewKeyValues()
 	keyValues.Append("Message", "Email was sent successfully")

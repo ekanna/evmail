@@ -134,7 +134,7 @@ func NewImapMailBoxAllMessages() *ImapMailBoxAllMessages {
 func ImapSendServerMessage(conn *tls.Conn, message string) (string, error) {
 	n, err := io.WriteString(conn, message)
 	if err != nil {
-		evlog.Fatalf("client: write:%v::%s", n, everror.NewFromError(err))
+		evlog.Fatalf("client: write:%v::%s", n, everror.NewFromError(err, everror.ERROR))
 	}
 	return "", nil
 }
@@ -301,7 +301,7 @@ func ImapReadEmailMessage(conn *tls.Conn, MailId int) (*Email, error) {
 func ImapConnect(Server string, Port int, Pem string, Key string) (*tls.Conn, string, error) {
 	cert, err := tls.LoadX509KeyPair(Pem, Key)
 	if err != nil {
-		return nil, "", everror.NewFromError(err)
+		return nil, "", everror.NewFromError(err, everror.ERROR)
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	ServerImapConnectionString := Server
@@ -309,7 +309,7 @@ func ImapConnect(Server string, Port int, Pem string, Key string) (*tls.Conn, st
 	ServerImapConnectionString += strconv.Itoa(Port)
 	conn, err := tls.Dial("tcp", ServerImapConnectionString, &config)
 	if err != nil {
-		return nil, "", everror.NewFromError(err)
+		return nil, "", everror.NewFromError(err, everror.ERROR)
 	}
 	//evlog.Println("client: connected to: ", conn.RemoteAddr())
 	state := conn.ConnectionState()

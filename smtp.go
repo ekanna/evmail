@@ -56,7 +56,7 @@ func (Mail *Email) Send() error {
 		Mail.To,
 		content.Bytes())
 	if err != nil {
-		return everror.NewFromError(err)
+		return everror.NewFromError(err, everror.ERROR)
 	}
 	return nil
 }
@@ -64,7 +64,7 @@ func (Mail *Email) Send() error {
 func (Mail *Email) Attach(file string) error {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
-		return everror.NewFromError(err)
+		return everror.NewFromError(err, everror.ERROR)
 	}
 
 	_, fileName := filepath.Split(file)
