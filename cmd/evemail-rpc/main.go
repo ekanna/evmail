@@ -58,7 +58,7 @@ func main() {
 			evlog.Println("warning:", everror.NewFromError(err, everror.ERROR))
 		}
 
-		evlog.Fatal("listen error:", everror.NewFromError(e))
+		evlog.Fatal("listen error:", everror.NewFromError(e, everror.ERROR))
 	}
 	http.Serve(l, nil)
 }
